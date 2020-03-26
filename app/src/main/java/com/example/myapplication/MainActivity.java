@@ -10,6 +10,8 @@ import android.util.Log;
 import android.view.View;
 
 import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 
 public class MainActivity extends AppCompatActivity {
@@ -51,6 +53,52 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        findViewById(R.id.test2).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    String publicAccount = "1234567890";
+                    MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                    byte[] hashAccount = digest.digest(publicAccount.getBytes());
+                    Log.d(TAG, "hash account=" + hashAccount.length); //32 bytes
+                    Log.d(TAG, bytesToHex(hashAccount));
+
+                    byte[] randomSeed = intToByteArray((int) System.currentTimeMillis() / 1000);
+
+                    Log.d(TAG, "randomSeed=" + hashAccount.length); //4 bytes
+                    Log.d(TAG, bytesToHex(randomSeed));
+
+                    byte[] combined = new byte[hashAccount.length + randomSeed.length];
+
+                    for (int i = 0; i < combined.length; ++i) {
+                        combined[i] = i < hashAccount.length ? hashAccount[i] : randomSeed[i - hashAccount.length];
+                    }
+                } catch (NoSuchAlgorithmException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+    }
+
+    public static byte[] intToByteArray(int a)
+    {
+        byte[] ret = new byte[4];
+        ret[3] = (byte) (a & 0xFF);
+        ret[2] = (byte) ((a >> 8) & 0xFF);
+        ret[1] = (byte) ((a >> 16) & 0xFF);
+        ret[0] = (byte) ((a >> 24) & 0xFF);
+        return ret;
+    }
+
+    private static String bytesToHex(byte[] hash) {
+        StringBuffer hexString = new StringBuffer();
+        for (int i = 0; i < hash.length; i++) {
+            String hex = Integer.toHexString(0xff & hash[i]);
+        if(hex.length() == 1) hexString.append('0');
+            hexString.append(hex);
+        }
+        return hexString.toString();
     }
 
     private String decodeBase64(String coded){
